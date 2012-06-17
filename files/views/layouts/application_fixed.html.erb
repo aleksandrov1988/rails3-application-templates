@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>МГИУ</title>
+  <%= csrf_meta_tags %>
+  <%= stylesheet_link_tag "application", :media => "all" %>
+</head>
+<body>
+<div class="navbar navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <%= link_to image_tag('logo.png', :alt => "МГИУ"), "#", :class => "brand" %>
+      <div class="container nav-collapse">
+        <%= render 'layouts/topbar' %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="content">
+    <div class="row">
+      <%= render 'layout/messages' %>
+    </div>
+    <div class="row">
+      <%= yield %>
+    </div>
+  </div>
+
+  <footer>
+    <p><%= copyrights %>></p>
+  </footer>
+
+</div>
+<%= javascript_include_tag "application" %>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+!!! 5
+%html(lang="ru")
+  %head
+    %meta(charset="utf-8")
+    %title МГИУ
+    = csrf_meta_tags
+    = stylesheet_link_tag "application", :media => "all"
+  %body
+    .navbar.navbar-fixed-top
+      .navbar-inner
+        .container-fluid
+          =link_to image_tag('logo.png',:alt=>"МГИУ"),"#",:class=>"brand"
+          .container.nav-collapse=render 'layouts/topbar'
+    .container-fluid
+      .row-fluid=render 'layout/messages'
+      .row-fluid=yield
+      %footer
+        %p=copyrights
+    = javascript_include_tag "application"
