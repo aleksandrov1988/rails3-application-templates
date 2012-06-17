@@ -1,0 +1,63 @@
+body {
+  padding-top: 70px;
+}
+
+.center {
+  text-align: center;
+}
+
+.bold {
+  font-weight: bolder;
+}
+
+.sc {
+  text-transform: uppercase;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.large {
+  font-size: 125%;
+}
+
+.huge {
+  font-size: 250%;
+}
+
+.small {
+  font-size: 75%;
+}
+
+.tiny {
+  font-size: 40%;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.clear {
+  clear: both;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.hide {
+  display: none;
+}
+
+
+
+
