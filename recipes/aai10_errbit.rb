@@ -1,6 +1,6 @@
 say_wizard "Adding 'errbit'"
 gem 'airbrake'
-get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/blob/master/files/config/initializers/errbit_example.rb','config/initializers/errbit.rb'
+get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/config/initializers/errbit_example.rb','config/initializers/errbit.rb'
 
 __END__
 
