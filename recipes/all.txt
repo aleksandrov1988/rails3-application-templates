@@ -20,7 +20,7 @@ Rails.application.config.generators do |g|
 end
 RUBY
 
-@recipes = ["aai10_activerecord", "aai10_bootstrap", "aai10_cas", "aai10_errbit", "aai10_git", "aai10_haml", "aai10_home", "aai10_locale", "aai10_user"]
+@recipes = ["aai10_all"]
 
 def recipes; @recipes end
 def recipe?(name); @recipes.include?(name) end
@@ -101,19 +101,31 @@ end
 # >---------------------------------[ Recipes ]----------------------------------<
 
 
-# >--------------------------[ aai10_activerecord ]---------------------------<
+# >-------------------------------[ aai10_all ]-------------------------------<
 
-@current_recipe = "aai10_activerecord"
-@before_configs["aai10_activerecord"].call if @before_configs["aai10_activerecord"]
-say_recipe 'aai10_activerecord'
+@current_recipe = "aai10_all"
+@before_configs["aai10_all"].call if @before_configs["aai10_all"]
+say_recipe 'aai10_all'
 
 config = {}
 config['database'] = multiple_choice("Which database are you using?", [["MySQL", "mysql"], ["Oracle", "oracle"], ["PostgreSQL", "postgresql"], ["SQLite", "sqlite3"]]) if true && true unless config.key?('database')
 config['auto_create'] = yes_wizard?("Automatically create database with default configuration?") if true && true unless config.key?('auto_create')
 config['username'] = ask_wizard("Database username:") if true && true unless config.key?('username')
 config['password'] = ask_wizard("Database password:") if true && true unless config.key?('password')
+config['layout'] = multiple_choice("Which layout type do you prefer?", [["Fixed", "fixed"], ["Fluid", "fluid"]]) if true && true unless config.key?('layout')
+config['errbit'] = yes_wizard?("User errbit exceptions catcher?") if true && true unless config.key?('errbit')
+config['haml'] = yes_wizard?("Would you like to use Haml instead of ERB?") if true && true unless config.key?('haml')
+config['logins'] = ask_wizard("User logins: ") if true && true unless config.key?('logins')
 @configs[@current_recipe] = config
 
+###MSIU GEMS
+say_wizard "source gems.msiu.ru"
+inject_into_file 'Gemfile', :after => "source 'https://rubygems.org'\n" do
+  "source 'http://msiu:msiu@gems.msiu.ru'\n"
+end
+
+
+###DATABASE
 if config['database']
   say_wizard "Configuring '#{config['database']}' database settings..."
   old_gem = gem_for_database
@@ -129,29 +141,61 @@ if config['database']
   end
 end
 
-after_bundler do
-  rake "db:create" if config['auto_create']
+###HAML
+if config['haml']
+  say_wizard 'haml'
+  gem 'haml'
+  gem 'haml-rails'
 end
 
 
-# >----------------------------[ aai10_bootstrap ]----------------------------<
-
-@current_recipe = "aai10_bootstrap"
-@before_configs["aai10_bootstrap"].call if @before_configs["aai10_bootstrap"]
-say_recipe 'aai10_bootstrap'
-
-config = {}
-config['layout'] = multiple_choice("Which layout type do you prefer?", [["Fixed", "fixed"], ["Fluid", "fluid"]]) if true && true unless config.key?('layout')
-@configs[@current_recipe] = config
+###BOOTSTRAP
 
 gem 'twitter-bootstrap-rails', :group => :assets
 # please install gem 'therubyracer' to use Less
 gem 'therubyracer', :group => :assets, :platform => :ruby
+
+
+###CAS
+gem 'rubycas-client-msiu', '>= 1.1'
+
+###RSPEC
+gem 'rspec', :group => [:development, :test]
+gem 'rspec-rails', :group => [:development, :test]
+gem 'factory_girl', :group => [:development, :test]
+
+
+###ERRBIT
+if config['errbit']
+  gem 'airbrake'
+  get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/config/initializers/errbit_example.rb', 'config/initializers/errbit.rb'
+end
+
+
+###LOCALE
+gem 'russian'
+
+###LOGINS
+logins=config['logins'].split(/[\s,]+/)
+if logins.any?
+  append_file 'db/seeds.rb', logins.map { |l| "User.create(:login=>'#{l}')" }.join("\n")
+end
+
+
 after_bundler do
-  say_wizard "Bootstrap recipe running 'after bundler'"
+
+  ###DATABASE
+  say_wizard "rake db:create"
+  rake "db:create" if config['auto_create']
+
+  ###RSPEC
+  generate 'rspec:install'
+
+  ###BOOTSTRAP
+  say_wizard "bootstrap:install"
   generate 'bootstrap:install'
   layout_type=config['layout']
-  extname= recipes.any?{|r| r=~/haml/} ? 'haml' : 'erb'
+  extname= config['haml'] ? 'haml' : 'erb'
   remove_file 'app/views/layouts/application.html.erb'
   remove_file 'app/views/layouts/application.html.haml'
   get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/helpers/basic_helper.rb', 'app/helpers/basic_helper.rb'
@@ -164,167 +208,62 @@ after_bundler do
   get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/images/favicon.ico', 'public/favicon.ico'
   get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/images/logo.png', 'app/assets/images/logo.png'
   get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/assets/stylesheets/basic.css', 'app/assets/stylesheets/basic.css'
-end
 
-
-# >-------------------------------[ aai10_cas ]-------------------------------<
-
-@current_recipe = "aai10_cas"
-@before_configs["aai10_cas"].call if @before_configs["aai10_cas"]
-say_recipe 'aai10_cas'
-
-
-@configs[@current_recipe] = config
-
-say_wizard "Adding 'aai10-cas'"
-gem 'rubycas-client-msiu', '>= 1.1'
-
-after_bundler do
-  get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/config/initializers/cas.rb','config/initializers/cas.rb'
+  ###CAS
+  get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/config/initializers/cas.rb', 'config/initializers/cas.rb'
   remove_file 'app/controllers/application_controller.rb'
   get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/controllers/application_controller.rb', 'app/controllers/application_controller.rb'
-end
 
 
-# >-----------------------------[ aai10_errbit ]------------------------------<
+  ###HOME PAGE
+  say_wizard "Generate Home Page"
 
-@current_recipe = "aai10_errbit"
-@before_configs["aai10_errbit"].call if @before_configs["aai10_errbit"]
-say_recipe 'aai10_errbit'
-
-
-@configs[@current_recipe] = config
-
-say_wizard "Adding 'errbit'"
-gem 'airbrake'
-get 'https://raw.github.com/aleksandrov1988/rails3-application-templates/master/files/config/initializers/errbit_example.rb','config/initializers/errbit.rb'
-
-
-# >-------------------------------[ aai10_git ]-------------------------------<
-
-@current_recipe = "aai10_git"
-@before_configs["aai10_git"].call if @before_configs["aai10_git"]
-say_recipe 'aai10_git'
-
-
-@configs[@current_recipe] = config
-
-after_everything do
-  
-  say_wizard "Git recipe running 'after everything'"
-    append_file '.gitignore','/.idea'
-
-  # Initialize new Git repo
-  git :init
-  git :add => '.'
-  git :commit => "-aqm 'new Rails app generated by Rails Apps Composer gem'"
-end
-
-
-# >------------------------------[ aai10_haml ]-------------------------------<
-
-@current_recipe = "aai10_haml"
-@before_configs["aai10_haml"].call if @before_configs["aai10_haml"]
-say_recipe 'aai10_haml'
-
-config = {}
-config['haml'] = yes_wizard?("Would you like to use Haml instead of ERB?") if true && true unless config.key?('haml')
-@configs[@current_recipe] = config
-
-if config['haml']
-  gem 'haml'
-  gem 'haml-rails'
-else
-  recipes.delete('haml')
-end
-
-
-# >------------------------------[ aai10_home ]-------------------------------<
-
-@current_recipe = "aai10_home"
-@before_configs["aai10_home"].call if @before_configs["aai10_home"]
-say_recipe 'aai10_home'
-
-
-@configs[@current_recipe] = config
-
-after_bundler do
-
-  say_wizard "HomePage recipe running 'after bundler'"
-
-  # remove the default home page
   remove_file 'public/index.html'
   remove_file 'public/rails.png'
 
-  # create a home controller and view
   generate(:controller, "home index")
 
-  # set up a simple home page (with placeholder content)
-  use_haml=recipes.any? { |r| r=~/haml/ }
-  ext=use_haml ? 'haml' : 'erbs'
-  remove_file "app/views/home/index.html.#{ext}"
-  create_file "app/views/home/index.html.#{ext}" do
-    if use_haml
-      <<-'HAML'
-%h3 Home
-      HAML
+  remove_file "app/views/home/index.html.#{extname}"
+  create_file "app/views/home/index.html.#{extname}" do
+    if config['haml']
+      "%h3 Home"
     else
-      <<-ERB
-<h3>Home</h3>
-      ERB
+      "<h3>Home</h3>"
     end
   end
-
-  # set routes
   gsub_file 'config/routes.rb', /get \"home\/index\"/, 'root :to => "home#index"'
 
-end
 
-
-# >-----------------------------[ aai10_locale ]------------------------------<
-
-@current_recipe = "aai10_locale"
-@before_configs["aai10_locale"].call if @before_configs["aai10_locale"]
-say_recipe 'aai10_locale'
-
-
-@configs[@current_recipe] = config
-
-say_wizard "Adding 'aai10-locale'"
-gem 'russian'
-after_bundler do
+  ###LOCALE
   gsub_file 'config/application.rb', /# config.time_zone = 'Central Time \(US & Canada\)'/, '  config.time_zone = "Moscow"'
   create_file 'config/locales/ru.yml' do
     <<-'YML'
-ru:
-  activerecord:
-    models:
-    attributes:
-YML
+  ru:
+    activerecord:
+      models:
+      attributes:
+    YML
+  end
+end
+
+after_everything do
+
+  ###LOGINS
+  unless logins.blank?
+    generate 'model User login'
+    rake 'db:migrate'
+    rake 'db:seed'
   end
 
-end
+  ###GIT
+  say_wizard "Git initialize"
+  append_file '.gitignore', '/.idea'
+  append_file '.gitignore', '/.redcar'
+  append_file '.gitignore', '/.nbproject'
 
-
-# >------------------------------[ aai10_user ]-------------------------------<
-
-@current_recipe = "aai10_user"
-@before_configs["aai10_user"].call if @before_configs["aai10_user"]
-say_recipe 'aai10_user'
-
-config = {}
-config['logins'] = ask_wizard("User logins: ") if true && true unless config.key?('logins')
-@configs[@current_recipe] = config
-
-logins=config['logins'].split(/[\s,]+/)
-if logins.any?
-  append_file 'db/seeds.rb', logins.map { |l| "User.create(:login=>'#{l}')" }.join("\n")
-end
-
-after_bundler do
-  generate 'model User login'
-  rake 'db:migrate'
-  rake 'db:seed'
+  git :init
+  git :add => '.'
+  git :commit => "-aqm 'new Rails app generated by Rails Apps Composer gem'"
 end
 
 
