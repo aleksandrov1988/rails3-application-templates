@@ -1,7 +1,7 @@
 ###MSIU GEMS
 say_wizard "source gems.msiu.ru"
 inject_into_file 'Gemfile', :after => "source 'https://rubygems.org'\n" do
-  "source 'http://msiu:msiu@gems.msiu.ru'\n"
+  "source 'http://gems.msiu.ru'\n"
 end
 
 
@@ -117,12 +117,12 @@ after_bundler do
   ###LOCALE
   gsub_file 'config/application.rb', /# config.time_zone = 'Central Time \(US & Canada\)'/, '  config.time_zone = "Moscow"'
   create_file 'config/locales/ru.yml' do
-    <<-'YML'
-  ru:
-    activerecord:
-      models:
-      attributes:
-    YML
+<<-'YML'
+ru:
+  activerecord:
+    models:
+    attributes:
+  YML
   end
 end
 
