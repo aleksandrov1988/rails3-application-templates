@@ -33,7 +33,7 @@ end
 
 gem 'twitter-bootstrap-rails', :group => :assets
 # please install gem 'therubyracer' to use Less
-gem 'therubyracer', :group => :assets, :platform => :ruby
+gem 'therubyracer', :group => :assets, :platforms => :ruby
 
 
 ###CAS
