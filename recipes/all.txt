@@ -257,9 +257,9 @@ after_everything do
 
   ###GIT
   say_wizard "Git initialize"
-  append_file '.gitignore', '/.idea'
-  append_file '.gitignore', '/.redcar'
-  append_file '.gitignore', '/.nbproject'
+  append_file '.gitignore',  "/.idea\n"
+  append_file '.gitignore', "/.redcar\n"
+  append_file '.gitignore', "/.nbproject\n"
 
   git :init
   git :add => '.'
